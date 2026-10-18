@@ -1,0 +1,20 @@
+{
+  "name": "adb-wireless-manager",
+  "version": "1.0.0",
+  "description": "Ultra-fast, cross-platform Android Wireless Debugging Manager for macOS and Windows with 0 dependencies",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "adb",
+    "android",
+    "wireless-debugging",
+    "pairing",
+    "mdns",
+    "macos",
+    "windows"
+  ],
+  "author": "ugun-byte",
+  "license": "MIT"
+}
