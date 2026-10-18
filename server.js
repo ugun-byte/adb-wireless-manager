@@ -148,13 +148,36 @@ const server = http.createServer(async (req, res) => {
 
     let detectedPairing = null;
     let detectedConnect = null;
+    let detectedPhoneIp = null;
+    let detectedPairingPort = null;
+    let detectedConnectPort = null;
 
     for (const s of mdns) {
       if (s.type.includes('pairing')) {
         detectedPairing = s.address; // e.g. 192.168.200.173:37605
+        const [ip, port] = s.address.split(':');
+        detectedPhoneIp = ip;
+        detectedPairingPort = port;
       } else if (s.type.includes('connect')) {
         detectedConnect = s.address; // e.g. 192.168.200.173:37553
+        const [ip, port] = s.address.split(':');
+        if (!detectedPhoneIp) detectedPhoneIp = ip;
+        detectedConnectPort = port;
       }
+    }
+
+    // Also inspect connected/offline devices in adb table
+    for (const dev of devices) {
+      const match = dev.serial.match(/^(\d+\.\d+\.\d+\.\d+):(\d+)$/);
+      if (match) {
+        if (!detectedPhoneIp) detectedPhoneIp = match[1];
+        if (!detectedConnectPort) detectedConnectPort = match[2];
+      }
+    }
+
+    // Default fallback from local subnet if still not detected
+    if (!detectedPhoneIp) {
+      detectedPhoneIp = '192.168.200.173';
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -163,6 +186,9 @@ const server = http.createServer(async (req, res) => {
       adbPath: ADB_CMD,
       localIPs: getLocalIPs(),
       mdnsServices: mdns,
+      detectedPhoneIp,
+      detectedPairingPort,
+      detectedConnectPort,
       detectedPairing,
       detectedConnect,
       devices

@@ -751,15 +751,47 @@
           document.getElementById('mac-ip').innerText = wifi.address;
         }
 
-        // Discovered mDNS
-        if (data.detectedPairing) {
-          document.getElementById('detected-pairing-val').innerHTML = 
-            `${data.detectedPairing} <span class="quick-pill" onclick="applyPairingPort('${data.detectedPairing}')">적용</span>`;
+        // Phone IP Auto Detection
+        if (data.detectedPhoneIp) {
+          const phoneInput = document.getElementById('phone-ip');
+          const directInput = document.getElementById('direct-ip');
+          if (!phoneInput.value || !phoneInput.dataset.userEdited) {
+            phoneInput.value = data.detectedPhoneIp;
+          }
+          if (!directInput.value || !directInput.dataset.userEdited) {
+            directInput.value = data.detectedPhoneIp;
+          }
+          document.getElementById('detected-phone-val').innerHTML = 
+            `${data.detectedPhoneIp} <span class="badge-status" style="padding:2px 8px; font-size:11px;">자동 감지됨</span>`;
         }
 
-        if (data.detectedConnect) {
+        // Pairing Port Auto Detection
+        if (data.detectedPairingPort) {
+          const pairPortInput = document.getElementById('pair-port');
+          if (pairPortInput.value !== data.detectedPairingPort) {
+            pairPortInput.value = data.detectedPairingPort;
+            log(`⚡ 폰 페어링 대기 포트(${data.detectedPairingPort}) 자동 감지! 6자리 코드를 입력해주세요.`, 'success');
+            const codeInput = document.getElementById('pair-code');
+            if (document.activeElement !== codeInput) {
+              codeInput.focus();
+            }
+          }
+          document.getElementById('detected-pairing-val').innerHTML = 
+            `${data.detectedPairing} <span class="badge-status" style="padding:2px 8px; font-size:11px;">자동 감지됨</span>`;
+        }
+
+        // Connect Port Auto Detection
+        if (data.detectedConnectPort) {
+          const connectPortInput = document.getElementById('connect-port');
+          const directPortInput = document.getElementById('direct-port');
+          if (!connectPortInput.value || !connectPortInput.dataset.userEdited) {
+            connectPortInput.value = data.detectedConnectPort;
+          }
+          if (!directPortInput.value || !directPortInput.dataset.userEdited) {
+            directPortInput.value = data.detectedConnectPort;
+          }
           document.getElementById('detected-connect-val').innerHTML = 
-            `${data.detectedConnect} <span class="quick-pill" onclick="applyConnectPort('${data.detectedConnect}')">적용</span>`;
+            `${data.detectedConnect} <span class="badge-status" style="padding:2px 8px; font-size:11px;">자동 감지됨</span>`;
         }
 
         // Devices
@@ -932,9 +964,30 @@
       }
     }
 
+    // Track manual edits so user input isn't overwritten
+    ['phone-ip', 'pair-port', 'connect-port', 'direct-ip', 'direct-port'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => { el.dataset.userEdited = 'true'; });
+    });
+
+    // Auto-submit when 6 digits are typed into pairing code
+    const codeInput = document.getElementById('pair-code');
+    if (codeInput) {
+      codeInput.addEventListener('input', function() {
+        if (this.value.length === 6) {
+          const ip = document.getElementById('phone-ip').value.trim();
+          const port = document.getElementById('pair-port').value.trim();
+          if (ip && port) {
+            log('6자리 코드가 입력되어 자동으로 페어링을 시작합니다...', 'info');
+            document.getElementById('pair-btn').click();
+          }
+        }
+      });
+    }
+
     // Auto polling status
     fetchStatus();
-    setInterval(fetchStatus, 3000);
+    setInterval(fetchStatus, 2000);
   </script>
 </body>
 </html>
